@@ -23,11 +23,9 @@ import subprocess
 
 from RealtimeTTS import (
     TextToAudioStream,
-    AzureEngine,
-    ElevenlabsEngine,
     SystemEngine,
     CoquiEngine,
-    OpenAIEngine,
+    KokoroEngine,
 )
 
 from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
@@ -280,7 +278,7 @@ class EngineManager:
 
     def _initialize_engine(self, idx):
         """Helper method to initialize a single engine"""
-        engine = CoquiEngine(voices_path='/home/ubuntu/realtime_tts/RealtimeTTS/tests/coqui_voices/',voice='coqui_Alexandra Hisakawa.wav')
+        engine = KokoroEngine()
         voices = engine.get_voices()
         return engine, voices
 
@@ -315,7 +313,7 @@ class EngineManager:
             print(f"Starting background replacement of {engine_id}, time = {(s2-s1)/1000}")
 
             s1 = time.time()
-            new_engine = CoquiEngine(voices_path='/home/ubuntu/realtime_tts/RealtimeTTS/tests/coqui_voices/',voice='coqui_Alexandra Hisakawa.wav')
+            new_engine = KokoroEngine()
             voices = new_engine.get_voices()
             s2 = time.time()
 
@@ -361,11 +359,6 @@ class EngineManager:
         return engine_id
 
     
-
-    # async def _cleanup_engine(self, engine_id):
-
-    #     self.engines[engine_id] = CoquiEngine()
-    #     voices = self.engines[engine_id].voices()
 
         
 
@@ -1016,7 +1009,7 @@ if __name__ == "__main__":
     try:
         # Initialize Coqui engine
         print("Initializing Coqui engine")
-        engines["coqui"] = CoquiEngine(voices_path='/home/ubuntu/realtime_tts/RealtimeTTS/tests/coqui_voices/',voice='coqui_Alexandra Hisakawa.wav')
+        engines["coqui"] = KokoroEngine()
         
         # Get voices for the engine
         print("Getting voices for Coqui engine")
@@ -1307,7 +1300,7 @@ if __name__ == "__main__":
     try:
         # Initialize Coqui engine
         print("Initializing Coqui engine")
-        engines["coqui"] =CoquiEngine(voices_path='/home/ubuntu/realtime_tts/RealtimeTTS/tests/coqui_voices/',voice='coqui_Alexandra Hisakawa.wav')
+        engines["coqui"] =KokoroEngine()
         
         # Get voices for the engine
         print("Getting voices for Coqui engine")

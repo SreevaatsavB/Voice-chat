@@ -1,0 +1,7 @@
+RealtimeSTT
+fastapi
+uvicorn
+scipy
+python-dotenv
+websockets
+ssl

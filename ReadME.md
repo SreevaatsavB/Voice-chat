@@ -33,3 +33,15 @@ For production/remote server with SSL:
 python tts_engine.py --port PORT_NUMBER --use-ssl
 ```
 
+
+
+### Create venvs 
+
+python3 -m venv venv_tts
+
+python3 -m venv venv_stt
+
+For stt on MACOS :- 
+brew install portaudio
+brew install ffmpeg
+

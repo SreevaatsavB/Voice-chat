@@ -1,0 +1,6 @@
+RealtimeTTS
+fastapi
+uvicorn
+torch
+python-dotenv
+wave
