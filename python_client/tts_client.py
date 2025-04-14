@@ -24,7 +24,7 @@ class AudioStreamTester:
         for i in range(num_tests):
             print(f"\nTest {i + 1}/{num_tests}")
             await self.single_tts_test(url, test_text, ssl_context)
-            await asyncio.sleep(1)  # Wait between tests
+            await asyncio.sleep(1) 
             
         if self.total_latency:
             avg_latency = sum(self.total_latency) / len(self.total_latency)
@@ -48,21 +48,13 @@ class AudioStreamTester:
             # Configure client session with SSL context
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             headers = {"X-Session-ID": session_id}  #
-                # Configure client session with SSL context
 
             async with aiohttp.ClientSession(connector=connector) as session:
                 async with session.get(f"{url}/tts?text={text}", headers=headers) as response:
                     if response.status != 200:
                         print(f"Error: Server returned status {response.status}")
                         return
-            # connector = aiohttp.TCPConnector(ssl=ssl_context)
-            # async with aiohttp.ClientSession(connector=connector) as session:
-            #     async with session.get(f"{url}/tts?text={text}") as response:
-            #         if response.status != 200:
-            #             print(f"Error: Server returned status {response.status}")
-            #             return
-                    
-                    # Initialize audio stream for playback
+
                     self.stream = self.p.open(
                         format=pyaudio.paInt16,
                         channels=1,

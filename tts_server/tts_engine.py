@@ -427,33 +427,7 @@ async def shutdown_event():
         except Exception as e:
             print(f"Error shutting down TTS engine: {str(e)}")
 
-@app.get("/voices")
-def get_voices():
-    voices_list = []
-    if tts_voices:
-        for voice in tts_voices:
-            # Handle different voice formats
-            if isinstance(voice, str):
-                voices_list.append(voice)
-            elif hasattr(voice, 'name'):
-                voices_list.append(voice.name)
-    return voices_list
 
-@app.get("/setvoice")
-def set_voice(request: Request, voice_name: str = Query(...)):
-    print(f"Getting request: {voice_name}")
-    if not tts_engine:
-        print("No engine is currently initialized")
-        return {"error": "No engine is currently initialized"}
-
-    try:
-        print(f"Setting voice to {voice_name}")
-        tts_engine.set_voice(voice_name)
-        return {"message": f"Voice set to {voice_name} successfully"}
-    except Exception as e:
-        print(f"Error setting voice: {str(e)}")
-        logging.error(f"Error setting voice: {str(e)}")
-        return {"error": "Failed to set voice"}
 
 @app.get("/")
 def root_page():
