@@ -9,7 +9,9 @@ from scipy.signal import resample
 import time
 import traceback
 import argparse
-# Your existing configuration variables
+
+
+
 end_of_sentence_detection_pause = 0.45
 unknown_sentence_detection_pause = 0.7
 mid_sentence_detection_pause = 2.0
@@ -41,7 +43,7 @@ class SecureSTTServer:
         # Create SSL context with self-signed certificate
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ssl_context.load_cert_chain(self.ssl_cert, self.ssl_key)
-        # Allow legacy renegotiation needed for some older clients
+
         ssl_context.options |= ssl.OP_LEGACY_SERVER_CONNECT
         return ssl_context
 
@@ -65,12 +67,15 @@ class SecureSTTServer:
                 try:
                     await asyncio.wait_for(websocket.send(json.dumps(message_obj)), timeout=2.0)
                     print(f"Successfully sent message to client")
+
                 except asyncio.TimeoutError:
                     print(f"Timeout sending to client, marking for removal")
                     disconnected.add(websocket)
+
                 except websockets.exceptions.ConnectionClosed:
                     print(f"Found closed websocket, marking for removal")
                     disconnected.add(websocket)
+
                 except Exception as e:
                     print(f"Error sending to client: {e}")
                     disconnected.add(websocket)
@@ -97,7 +102,7 @@ class SecureSTTServer:
 
     def text_detected(self, text):
         if not self.connected_clients:
-            return  # Don't process if no clients connected
+            return  
             
         text = text.lstrip()
         if text.startswith("..."):
@@ -144,7 +149,7 @@ class SecureSTTServer:
     async def handle_audio_input(self, websocket):
         """Modified audio input handling with voice activity detection"""
         print("\nListening for voice input...")
-        self.current_websocket = websocket  # Store websocket reference for interruption handling
+        self.current_websocket = websocket  
         
         try:
             self.input_stream = self.p.open(
@@ -236,7 +241,7 @@ class SecureSTTServer:
                                 self.client_states[websocket]['session_id'] = self.current_session_id
                                 continue
                         except json.JSONDecodeError:
-                            pass  # Not a control message, process as audio data
+                            pass  
                     
                     # Process audio data if client's session is current
                     if self.client_states[websocket].get('session_id') == self.current_session_id:
@@ -288,6 +293,8 @@ class SecureSTTServer:
 #export  LD_LIBRARY_PATH=/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib:/opt/amazon/efa/lib:/opt/amazon/openmpi/lib:/opt/aws-ofi-nccl/lib:/usr/local/cuda/lib:/usr/local/cuda:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/lib:/usr/lib
 
     def _recorder_thread(self):
+
+        # Recorder configuration for the speech to text model (Default ones)
         recorder_config = {
             'spinner': False,
             'use_microphone': False,
@@ -350,7 +357,7 @@ class SecureSTTServer:
             ssl=ssl_context
         ):
             print(f"WebSocket server is running on {protocol}://0.0.0.0:{self.port}")
-            await asyncio.Future()  # run forever
+            await asyncio.Future()  
 
 
 def generate_self_signed_cert(cert_path, key_path):
@@ -358,7 +365,6 @@ def generate_self_signed_cert(cert_path, key_path):
     from pathlib import Path
     import subprocess
     
-    # Create directory if it doesn't exist
     cert_dir = Path(cert_path).parent
     cert_dir.mkdir(parents=True, exist_ok=True)
     
@@ -370,7 +376,7 @@ def generate_self_signed_cert(cert_path, key_path):
             '2048'
         ], check=True)
         
-        # Generate CSR and self-signed certificate in one command
+        # Generate CSR and self-signed certificate
         subprocess.run([
             'openssl', 'req', '-x509',
             '-new',

@@ -16,7 +16,6 @@ class STTClient:
         self.CHANNELS = 1
         self.RATE = 44100
         
-        # Initialize PyAudio
         self.p = pyaudio.PyAudio()
         
     async def receive_transcription(self, websocket):
@@ -24,15 +23,17 @@ class STTClient:
         try:
             async for message in websocket:
                 data = json.loads(message)
+
                 if data['type'] == 'realtime':
-                    # Print realtime transcription (overwrite line)
                     print(f"\rTranscription: {data['text']}", end='', flush=True)
+
                 elif data['type'] == 'fullSentence':
-                    # Print full sentences on new lines
                     print(f"\nFull sentence: {data['text']}")
+
         except websockets.exceptions.ConnectionClosed:
             print("\nConnection to server closed")
             self.is_running = False
+
         except Exception as e:
             print(f"\nError receiving transcription: {e}")
             self.is_running = False
@@ -52,10 +53,10 @@ class STTClient:
             
             while self.is_running:
                 try:
-                    # Read audio data
+                    
                     audio_data = stream.read(self.CHUNK, exception_on_overflow=False)
                     
-                    # Prepare metadata
+                    
                     metadata = {
                         "sampleRate": self.RATE,
                         "chunkSize": len(audio_data)
@@ -70,7 +71,7 @@ class STTClient:
                         audio_data
                     )
                     
-                    # Send to server
+                    
                     await websocket.send(message)
                     
                 except Exception as e:
@@ -79,6 +80,7 @@ class STTClient:
                     
         except Exception as e:
             print(f"\nError setting up audio stream: {e}")
+            
         finally:
             if 'stream' in locals():
                 stream.stop_stream()
