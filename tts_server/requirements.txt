@@ -1,4 +1,4 @@
-RealtimeTTS
+realtimetts[kokoro]
 fastapi
 uvicorn
 torch

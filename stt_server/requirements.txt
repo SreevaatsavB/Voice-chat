@@ -1,4 +1,4 @@
-RealtimeSTT
+realtimetts
 fastapi
 uvicorn
 scipy

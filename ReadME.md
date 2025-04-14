@@ -37,7 +37,7 @@ python tts_engine.py --port PORT_NUMBER --use-ssl
 
 ### Create venvs 
 
-python3 -m venv venv_tts
+python3.10 -m venv "tts_env"
 
 python3 -m venv venv_stt
 
