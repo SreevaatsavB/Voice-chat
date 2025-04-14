@@ -189,20 +189,20 @@ class TTSRequestHandler:
 
     def on_audio_chunk(self, chunk):
         if chunk is not None and self.is_active:
+            
             # Use run_coroutine_threadsafe instead of create_task
             future = asyncio.run_coroutine_threadsafe(
                 self.audio_queue.put([chunk, self.session_id]), 
                 self.loop
             )
-            future.result()  # Wait for the result
+            future.result()  
 
     def on_audio_stream_stop(self):
         print(f"[Session {self.session_id}] Stream stop signal received")
         if self.is_active:
             # Add a longer delay before signaling end of stream to ensure all audio is processed
-            time.sleep(1.0)  # Increased delay from 0.2 to 1.0 seconds
+            time.sleep(1.0)  
             
-            # Mark the stream as finished
             self.is_finished = True
             
             # Use run_coroutine_threadsafe instead of create_task
@@ -210,7 +210,7 @@ class TTSRequestHandler:
                 self.audio_queue.put([None, self.session_id]), 
                 self.loop
             )
-            future.result()  # Wait for the result
+            future.result()  
 
     def cleanup(self):
         """Clean up handler resources"""
@@ -239,7 +239,7 @@ class TTSRequestHandler:
         """Called when audio playback stops"""
         if self.is_active and self.session_id == GLOBAL_SESSION_ID:
             print(f"[Session {self.session_id}] Playback stopped")
-            # DO NOT clear buffers to avoid losing audio chunks
+            
 
     async def play_text_to_speech(self, text):
         if self.is_active and self.session_id == GLOBAL_SESSION_ID:
@@ -270,6 +270,7 @@ class TTSRequestHandler:
 
 app = FastAPI()
 
+# CORS middleware   
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -286,6 +287,7 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     return response
+
 
 def create_wave_header_for_engine(engine):
     _, _, sample_rate = engine.get_stream_info()
@@ -304,7 +306,6 @@ def create_wave_header_for_engine(engine):
     wave_header_bytes = wav_header.read()
     wav_header.close()
 
-    # Create a new BytesIO with the correct MIME type for Firefox
     final_wave_header = io.BytesIO()
     final_wave_header.write(wave_header_bytes)
     final_wave_header.seek(0)
@@ -317,7 +318,6 @@ async def startup_event():
     
     print("Initializing TTS Engine...")
     try:
-        # Initialize a single Kokoro engine
         tts_engine = KokoroEngine()
         print("TTS Engine initialized successfully")
     except Exception as e:
@@ -344,22 +344,19 @@ async def tts(
     GLOBAL_SESSION_ID = session_id
     print(f"Received TTS request for session {session_id}")
     
-    # Gently terminate existing sessions without clearing buffers
     previous_session_ids = list(active_sessions.keys())
     print("Previous session ids:", previous_session_ids)
     for sess_id in previous_session_ids:
-        if sess_id != session_id:  # Don't stop the current session if it exists
+        if sess_id != session_id:  
             old_handler = active_sessions[sess_id]
             old_handler.is_active = False
-            old_handler.stop()  # This now stops without clearing buffers
+            old_handler.stop()  
     
-    # Create new handler with the single global engine or use existing
     if session_id not in active_sessions:
         request_handler = TTSRequestHandler(session_id)
         active_sessions[session_id] = request_handler
     else:
         request_handler = active_sessions[session_id]
-        # Reset handler state
         request_handler.is_active = True
         request_handler.is_finished = False
     
@@ -368,7 +365,6 @@ async def tts(
     print(f"TTS Request - Text: {text}, Session: {session_id}")
     print(f"Browser Request: {browser_request}")
     
-    # Process TTS request
     await request_handler.play_text_to_speech(text)
     
     headers = {
@@ -392,11 +388,12 @@ async def cleanup_inactive_sessions():
             current_sessions = list(active_sessions.keys())
             for session_id in current_sessions:
                 handler = active_sessions[session_id]
+
                 # Only cleanup sessions that have been inactive for a while
                 if not handler.is_active and handler.is_finished:
                     print(f"Cleaning up inactive session {session_id}")
                     handler.cleanup()
-            await asyncio.sleep(300)  # Increased from 60 to 300 seconds
+            await asyncio.sleep(300)  
         except Exception as e:
             print(f"Error in cleanup task: {str(e)}")
             await asyncio.sleep(300)
@@ -411,15 +408,14 @@ async def shutdown_event():
     global active_sessions, tts_engine
     print("Server shutting down...")
     
-    # Just set sessions as inactive but don't force stop
     current_sessions = list(active_sessions.keys())
     for session_id in current_sessions:
         handler = active_sessions[session_id]
         handler.is_active = False
     
     # Allow time for pending operations to complete
-    await asyncio.sleep(3)  # Increased from 2 to 3 seconds
-    
+    await asyncio.sleep(3)  
+
     # Shutdown the engine
     if tts_engine:
         try:
