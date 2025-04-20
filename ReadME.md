@@ -9,6 +9,7 @@ For local development (non-secure):
 python stt_engine.py --port PORT_NUMBER
 ```
 
+For production/remote server with SSL:
 ```
 python stt_engine.py --use-ssl --port PORT_NUMBER
 ```
