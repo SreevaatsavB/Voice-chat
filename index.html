@@ -281,16 +281,16 @@
         class VoiceChat {
             constructor(devMode = true) {
                 this.DEV_MODE = devMode;
-                const EC2_IP = '3.238.98.245';
+                const EC2_IP = '127.0.0.1';
                 
                 // Determine protocol based on dev mode
                 const protocol = this.DEV_MODE ? 'ws' : 'wss';
                 this.STT_HOST = `${protocol}://${EC2_IP}`;
-                this.STT_PORT = '8011';
+                this.STT_PORT = '8006';
 
                 // Determine TTS protocol based on dev mode
                 const ttsProtocol = this.DEV_MODE ? 'http' : 'https';
-                this.TTS_HOST = `${ttsProtocol}://${EC2_IP}:8000`;
+                this.TTS_HOST = `${ttsProtocol}://${EC2_IP}:8001`;
 
                 this.GROQ_API_KEY = GROQ_API_KEY;
                 
