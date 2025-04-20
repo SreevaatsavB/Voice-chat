@@ -103,7 +103,7 @@ class AudioStreamTester:
 
 async def main():
     parser = argparse.ArgumentParser(description='Test TTS Streaming')
-    parser.add_argument('--url', default='http://localhost:8001', help='EC2 Server URL')
+    parser.add_argument('--url', default='http://0.0.0.0:8001', help='EC2 Server URL')
     parser.add_argument('--text', default='This is a test of the TTS streaming system.', help='Text to synthesize')
     parser.add_argument('--tests', type=int, default=3, help='Number of tests to run')
     parser.add_argument('--verify-ssl', action='store_true', help='Verify SSL certificate')

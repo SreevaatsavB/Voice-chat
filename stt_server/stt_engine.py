@@ -187,7 +187,7 @@ class SecureSTTServer:
                         
                         await websocket.send(message)
                     
-                    await asyncio.sleep(0.02)
+                    await asyncio.sleep(0.01)
                     
                 except Exception as e:
                     if not self.is_speaking:
@@ -298,9 +298,11 @@ class SecureSTTServer:
         recorder_config = {
             'spinner': False,
             'use_microphone': False,
-            'model': 'medium.en',
-            'input_device_index': 1,
-            'realtime_model_type': 'medium.en',
+            # 'model': 'medium.en',
+            'model': 'small.en',
+            'input_device_index': 0,
+            # 'realtime_model_type': 'medium.en',
+            'realtime_model_type': 'small.en',
             'language': 'en',
             'silero_sensitivity': 0.05,
             'webrtc_sensitivity': 3,

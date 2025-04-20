@@ -2,8 +2,9 @@ import asyncio
 import json
 import websockets
 import pyaudio
-import struct
 import argparse
+import time
+import traceback
 
 class STTClient:
     def __init__(self, server_url="ws://127.0.0.1:80"):
@@ -14,28 +15,45 @@ class STTClient:
         self.CHUNK = 1024
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
-        self.RATE = 44100
+        self.RATE = 16000  
         
         self.p = pyaudio.PyAudio()
         
     async def receive_transcription(self, websocket):
         """Handle incoming transcription messages from the server"""
+        print("Starting receive_transcription task...")
         try:
-            async for message in websocket:
-                data = json.loads(message)
+            # Listen for messages
+            while self.is_running:
+                try:
+                    # Use a timeout to periodically check if we're still running
+                    message = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                                        
+                    try:
+                        data = json.loads(message)
+                        message_type = data.get('type', 'unknown')
 
-                if data['type'] == 'realtime':
-                    print(f"\rTranscription: {data['text']}", end='', flush=True)
+                        if message_type == 'realtime':
+                            text = data.get('text', '')
+                            print(f"\rTranscription: {text}", end='', flush=True)
 
-                elif data['type'] == 'fullSentence':
-                    print(f"\nFull sentence: {data['text']}")
-
-        except websockets.exceptions.ConnectionClosed:
-            print("\nConnection to server closed")
+                        elif message_type == 'fullSentence':
+                            text = data.get('text', '')
+                            print(f"\nFull sentence: {text}")
+                            
+                    except json.JSONDecodeError:
+                        print(f"Received non-JSON message: {message[:100]}")
+                        
+                except asyncio.TimeoutError:
+                    continue  
+                    
+        except websockets.exceptions.ConnectionClosed as e:
+            print(f"\nConnection to server closed: {e}")
             self.is_running = False
 
         except Exception as e:
-            print(f"\nError receiving transcription: {e}")
+            print(f"\nError in receive_transcription: {e}")
+            traceback.print_exc()
             self.is_running = False
 
     async def stream_audio(self, websocket):
@@ -51,11 +69,15 @@ class STTClient:
             
             print("\nStreaming audio... (Press Ctrl+C to stop)")
             
+            await asyncio.sleep(0.15)
+            
             while self.is_running:
                 try:
-                    
+                    if websocket.closed:
+                        print("WebSocket closed, stopping audio stream")
+                        break
+                        
                     audio_data = stream.read(self.CHUNK, exception_on_overflow=False)
-                    
                     
                     metadata = {
                         "sampleRate": self.RATE,
@@ -64,22 +86,25 @@ class STTClient:
                     metadata_json = json.dumps(metadata)
                     metadata_bytes = metadata_json.encode('utf-8')
                     
-                    # Create message with metadata length prefix
                     message = (
                         len(metadata_bytes).to_bytes(4, byteorder='little') +
                         metadata_bytes +
                         audio_data
                     )
                     
-                    
                     await websocket.send(message)
+                    
+                    # Add a small delay to prevent overwhelming the server
+                    await asyncio.sleep(0.025)
                     
                 except Exception as e:
                     print(f"\nError streaming audio: {e}")
+                    traceback.print_exc()
                     break
                     
         except Exception as e:
             print(f"\nError setting up audio stream: {e}")
+            traceback.print_exc()
             
         finally:
             if 'stream' in locals():
@@ -90,26 +115,34 @@ class STTClient:
         """Main client loop"""
         try:
             print(f"Attempting to connect to {self.server_url}...")
-            async with websockets.connect(self.server_url) as websocket:
+            
+            async with websockets.connect(
+                self.server_url,
+                ping_interval=None,  # Disable automatic pings
+                close_timeout=5      # Wait 5 seconds for close handshake
+            ) as websocket:
                 print(f"Connected to STT server at {self.server_url}")
                 
-                # Create tasks for sending audio and receiving transcriptions
                 audio_task = asyncio.create_task(self.stream_audio(websocket))
                 transcription_task = asyncio.create_task(self.receive_transcription(websocket))
                 
-                # Wait for either task to complete
-                done, pending = await asyncio.wait(
-                    [audio_task, transcription_task],
-                    return_when=asyncio.FIRST_COMPLETED
-                )
+                print("Both tasks created and running")
                 
-                # Cancel remaining tasks
-                for task in pending:
-                    task.cancel()
-                    
-        except Exception as e:
+                # Wait for both tasks to complete
+                await asyncio.gather(audio_task, transcription_task)
+                
+        except websockets.exceptions.ConnectionClosed as e:
+            print(f"WebSocket connection closed: {e}")
+                
+        except (ConnectionRefusedError, OSError) as e:
             print(f"Connection error: {e}")
+                
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            traceback.print_exc()
+                
         finally:
+            print("Client shutting down...")
             self.is_running = False
             self.p.terminate()
 
@@ -132,6 +165,7 @@ def main():
         print("\nStopping client...")
     except Exception as e:
         print(f"Client error: {e}")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

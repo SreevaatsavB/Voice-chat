@@ -57,7 +57,7 @@ BROWSER_IDENTIFIERS = [
     "trident",
 ]
 
-EC2_IP = "3.238.98.245"  # Your EC2 IP
+EC2_IP = "0.0.0.0"  # Your EC2 IP
 origins = [
     "http://localhost:8001",
     "https://localhost:8001",
